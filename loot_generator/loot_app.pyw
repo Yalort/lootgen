@@ -20,6 +20,7 @@ class LootGeneratorApp:
         self.all_tags = load_all_tags()
         self.presets = load_presets()
         self.setup_ui()
+        self.update_preset_listbox()
 
     def setup_ui(self):
         frame = ttk.Frame(self.root, padding="10")
@@ -51,28 +52,33 @@ class LootGeneratorApp:
         #Generate button
         ttk.Button(frame, text="Generate Loot", command=self.generate_loot).grid(row=5, column=0, columnspan=2, pady=5)
 
-        # Presets management
-        ttk.Label(frame, text="Preset:").grid(row=6, column=0, sticky=tk.W)
-        self.preset_combo = ttk.Combobox(frame, values=list(self.presets.keys()))
-        self.preset_combo.grid(row=6, column=1, sticky=tk.EW)
+        # Presets management - searchable listbox
+        ttk.Label(frame, text="Search Presets:").grid(row=6, column=0, sticky=tk.W)
+        self.preset_search_var = tk.StringVar()
+        self.preset_search_var.trace_add("write", lambda *args: self.update_preset_listbox())
+        ttk.Entry(frame, textvariable=self.preset_search_var).grid(row=6, column=1, sticky=tk.EW)
 
-        ttk.Button(frame, text="Load Preset", command=self.load_preset).grid(row=7, column=0, columnspan=2)
-        ttk.Button(frame, text="Save Preset", command=self.save_preset).grid(row=8, column=0, columnspan=2)
-        ttk.Button(frame, text="Delete Preset", command=self.delete_preset).grid(row=9, column=0, columnspan=2)
+        ttk.Label(frame, text="Presets:").grid(row=7, column=0, sticky=tk.W)
+        self.preset_listbox = tk.Listbox(frame, height=5)
+        self.preset_listbox.grid(row=7, column=1, sticky=tk.EW)
+
+        ttk.Button(frame, text="Load Preset", command=self.load_preset).grid(row=8, column=0, columnspan=2)
+        ttk.Button(frame, text="Save Preset", command=self.save_preset).grid(row=9, column=0, columnspan=2)
+        ttk.Button(frame, text="Delete Preset", command=self.delete_preset).grid(row=10, column=0, columnspan=2)
 
         # Loot display
-        ttk.Label(frame, text="Generated Loot:").grid(row=10, column=0, sticky=tk.W)
+        ttk.Label(frame, text="Generated Loot:").grid(row=11, column=0, sticky=tk.W)
         self.output_area = scrolledtext.ScrolledText(frame, height=8)
-        self.output_area.grid(row=11, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
+        self.output_area.grid(row=12, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
 
         # Add/Delete Items
-        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=12, column=0, pady=5)
-        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=12, column=1, pady=5)
+        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=13, column=0, pady=5)
+        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=13, column=1, pady=5)
 
-        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=13, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=14, column=0, columnspan=2, pady=5)
 
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(11, weight=1)
+        frame.rowconfigure(12, weight=1)
 
 
     def generate_loot(self):
@@ -100,7 +106,11 @@ class LootGeneratorApp:
 
 
     def load_preset(self):
-        preset_name = self.preset_combo.get()
+        selection = self.preset_listbox.curselection()
+        if not selection:
+            messagebox.showerror("Error", "Preset not selected.")
+            return
+        preset_name = self.preset_listbox.get(selection[0])
         preset = self.presets.get(preset_name)
         if preset:
             self.loot_points_entry.delete(0, tk.END)
@@ -127,16 +137,20 @@ class LootGeneratorApp:
                 "exclude_tags": exclude_tags,
             }
             save_presets(self.presets)
-            self.preset_combo['values'] = list(self.presets.keys())
+            self.update_preset_listbox()
             messagebox.showinfo("Saved", f"Preset '{preset_name}' saved successfully!")
 
     def delete_preset(self):
-        preset_name = self.preset_combo.get()
+        selection = self.preset_listbox.curselection()
+        if selection:
+            preset_name = self.preset_listbox.get(selection[0])
+        else:
+            preset_name = None
         if preset_name in self.presets:
             if messagebox.askyesno("Delete", f"Are you sure you want to delete '{preset_name}'?"):
                 del self.presets[preset_name]
                 save_presets(self.presets)
-                self.preset_combo['values'] = list(self.presets.keys())
+                self.update_preset_listbox()
                 messagebox.showinfo("Deleted", f"Preset '{preset_name}' deleted.")
         else:
             messagebox.showerror("Error", "Preset not found.")
@@ -194,6 +208,13 @@ class LootGeneratorApp:
                 messagebox.showerror("Error", "Item not found.")
 
         ttk.Button(delete_window, text="Delete Item", command=confirm_delete).pack(pady=5)
+
+    def update_preset_listbox(self):
+        search = self.preset_search_var.get().lower()
+        names = [name for name in self.presets.keys() if search in name.lower()]
+        self.preset_listbox.delete(0, tk.END)
+        for name in names:
+            self.preset_listbox.insert(tk.END, name)
 
     def update_tag_list(self):
         self.all_tags = sorted({tag for item in self.loot_items for tag in item.tags})
