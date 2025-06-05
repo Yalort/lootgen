@@ -1,0 +1,9 @@
+{
+    "Treasure Chest": {
+        "loot_points": 50,
+        "tags": [
+            "weapon",
+            "magic"
+        ]
+    }
+}
