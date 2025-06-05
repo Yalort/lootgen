@@ -20,52 +20,64 @@ class LootGeneratorApp:
         self.loot_points_entry = ttk.Entry(frame)
         self.loot_points_entry.grid(row=0, column=1, sticky=tk.EW)
 
-        ttk.Label(frame, text="Tags (comma-separated):").grid(row=1, column=0, sticky=tk.W)
-        self.tags_entry = ttk.Entry(frame)
-        self.tags_entry.grid(row=1, column=1, sticky=tk.EW)
+        ttk.Label(frame, text="Include Tags (comma-separated):").grid(row=1, column=0, sticky=tk.W)
+        self.include_tags_entry = ttk.Entry(frame)
+        self.include_tags_entry.grid(row=1, column=1, sticky=tk.EW)
+
+        ttk.Label(frame, text="Exclude Tags (comma-separated):").grid(row=2, column=0, sticky=tk.W)
+        self.exclude_tags_entry = ttk.Entry(frame)
+        self.exclude_tags_entry.grid(row=2, column=1, sticky=tk.EW)
 
         # Rarities
-        ttk.Label(frame, text="Max Rarity (numeric):").grid(row=2, column=0, sticky=tk.W)
+        ttk.Label(frame, text="Max Rarity (numeric):").grid(row=3, column=0, sticky=tk.W)
         self.max_rarity_entry = ttk.Entry(frame)
-        self.max_rarity_entry.grid(row=2, column=1, sticky=tk.EW)
+        self.max_rarity_entry.grid(row=3, column=1, sticky=tk.EW)
 
-        ttk.Label(frame, text="Min Rarity (numeric):").grid(row=3, column=0, sticky=tk.W)
+        ttk.Label(frame, text="Min Rarity (numeric):").grid(row=4, column=0, sticky=tk.W)
         self.min_rarity_entry = ttk.Entry(frame)
-        self.min_rarity_entry.grid(row=3, column=1, sticky=tk.EW)
+        self.min_rarity_entry.grid(row=4, column=1, sticky=tk.EW)
 
 
         #Generate button
-        ttk.Button(frame, text="Generate Loot", command=self.generate_loot).grid(row=8, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Generate Loot", command=self.generate_loot).grid(row=5, column=0, columnspan=2, pady=5)
 
         # Presets management
-        ttk.Label(frame, text="Preset:").grid(row=4, column=0, sticky=tk.W)
+        ttk.Label(frame, text="Preset:").grid(row=6, column=0, sticky=tk.W)
         self.preset_combo = ttk.Combobox(frame, values=list(self.presets.keys()))
-        self.preset_combo.grid(row=4, column=1, sticky=tk.EW)
+        self.preset_combo.grid(row=6, column=1, sticky=tk.EW)
 
-        ttk.Button(frame, text="Load Preset", command=self.load_preset).grid(row=5, column=0, columnspan=2)
-        ttk.Button(frame, text="Save Preset", command=self.save_preset).grid(row=6, column=0, columnspan=2)
-        ttk.Button(frame, text="Delete Preset", command=self.delete_preset).grid(row=7, column=0, columnspan=2)
+        ttk.Button(frame, text="Load Preset", command=self.load_preset).grid(row=7, column=0, columnspan=2)
+        ttk.Button(frame, text="Save Preset", command=self.save_preset).grid(row=8, column=0, columnspan=2)
+        ttk.Button(frame, text="Delete Preset", command=self.delete_preset).grid(row=9, column=0, columnspan=2)
 
         # Loot display
-        ttk.Label(frame, text="Generated Loot:").grid(row=8, column=0, sticky=tk.W)
+        ttk.Label(frame, text="Generated Loot:").grid(row=10, column=0, sticky=tk.W)
         self.output_area = scrolledtext.ScrolledText(frame, height=8)
-        self.output_area.grid(row=9, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
+        self.output_area.grid(row=11, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
 
         # Add/Delete Items
-        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=10, column=0, pady=5)
-        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=10, column=1, pady=5)
+        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=12, column=0, pady=5)
+        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=12, column=1, pady=5)
 
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(9, weight=1)
+        frame.rowconfigure(11, weight=1)
 
 
     def generate_loot(self):
         points = int(self.loot_points_entry.get())
-        tags = [tag.strip() for tag in self.tags_entry.get().split(',')] if self.tags_entry.get() else None
+        include_tags = [tag.strip() for tag in self.include_tags_entry.get().split(',')] if self.include_tags_entry.get() else None
+        exclude_tags = [tag.strip() for tag in self.exclude_tags_entry.get().split(',')] if self.exclude_tags_entry.get() else None
         min_rarity = int(self.min_rarity_entry.get()) if self.min_rarity_entry.get() else None
         max_rarity = int(self.max_rarity_entry.get()) if self.max_rarity_entry.get() else None
 
-        loot = generate_loot(self.loot_items, points, tags, min_rarity, max_rarity)
+        loot = generate_loot(
+            self.loot_items,
+            points,
+            include_tags,
+            exclude_tags,
+            min_rarity,
+            max_rarity,
+        )
 
         self.output_area.delete('1.0', tk.END)
         if loot:
@@ -81,8 +93,12 @@ class LootGeneratorApp:
         if preset:
             self.loot_points_entry.delete(0, tk.END)
             self.loot_points_entry.insert(0, str(preset['loot_points']))
-            self.tags_entry.delete(0, tk.END)
-            self.tags_entry.insert(0, ', '.join(preset['tags']))
+            include_tags = preset.get('include_tags', preset.get('tags', []))
+            exclude_tags = preset.get('exclude_tags', [])
+            self.include_tags_entry.delete(0, tk.END)
+            self.include_tags_entry.insert(0, ', '.join(include_tags))
+            self.exclude_tags_entry.delete(0, tk.END)
+            self.exclude_tags_entry.insert(0, ', '.join(exclude_tags))
         else:
             messagebox.showerror("Error", "Preset not found.")
 
@@ -90,8 +106,14 @@ class LootGeneratorApp:
         preset_name = simpledialog.askstring("Save Preset", "Preset Name:")
         if preset_name:
             points = int(self.loot_points_entry.get())
-            tags = [tag.strip() for tag in self.tags_entry.get().split(',')]
-            self.presets[preset_name] = {"loot_points": points, "tags": tags}
+            include_tags = [tag.strip() for tag in self.include_tags_entry.get().split(',') if tag.strip()]
+            exclude_tags = [tag.strip() for tag in self.exclude_tags_entry.get().split(',') if tag.strip()]
+
+            self.presets[preset_name] = {
+                "loot_points": points,
+                "include_tags": include_tags,
+                "exclude_tags": exclude_tags,
+            }
             save_presets(self.presets)
             self.preset_combo['values'] = list(self.presets.keys())
             messagebox.showinfo("Saved", f"Preset '{preset_name}' saved successfully!")

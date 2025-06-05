@@ -1,7 +1,7 @@
 import json
 import random
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 @dataclass
 class LootItem:
@@ -24,10 +24,19 @@ def save_presets(presets, filepath='data/presets.json'):
     with open(filepath, 'w') as file:
         json.dump(presets, file, indent=4)
 
-def generate_loot(items, points, tags=None, min_rarity=None, max_rarity=None):
+def generate_loot(
+    items: List[LootItem],
+    points: int,
+    include_tags: Optional[List[str]] = None,
+    exclude_tags: Optional[List[str]] = None,
+    min_rarity: Optional[int] = None,
+    max_rarity: Optional[int] = None,
+):
     filtered_items = [
-        item for item in items 
-        if (not tags or set(tags).intersection(item.tags))
+        item
+        for item in items
+        if (not include_tags or set(include_tags).intersection(item.tags))
+        and (not exclude_tags or not set(exclude_tags).intersection(item.tags))
         and (min_rarity is None or item.rarity >= min_rarity)
         and (max_rarity is None or item.rarity <= max_rarity)
     ]
