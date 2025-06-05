@@ -7,6 +7,7 @@ from utils import (
     load_presets,
     save_presets,
     generate_loot,
+    parse_items_text,
     LootItem,
     _resolve,
 )
@@ -75,7 +76,8 @@ class LootGeneratorApp:
         ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=13, column=0, pady=5)
         ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=13, column=1, pady=5)
 
-        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=14, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=14, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=15, column=0, columnspan=2, pady=5)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(12, weight=1)
@@ -204,6 +206,31 @@ class LootGeneratorApp:
                 messagebox.showerror("Error", f"Invalid input: {e}")
 
         ttk.Button(add_window, text="Add Item", command=save_new_item).grid(row=len(fields), column=0, columnspan=2, pady=5)
+
+    def bulk_add_items(self):
+        bulk_window = tk.Toplevel(self.root)
+        bulk_window.title("Bulk Add Loot Items")
+
+        ttk.Label(
+            bulk_window,
+            text="Enter items one per line as name|rarity|description|point_value|tag1,tag2",
+        ).pack(pady=5)
+        text_area = tk.Text(bulk_window, width=60, height=10)
+        text_area.pack(padx=5, pady=5)
+
+        def save_bulk():
+            try:
+                items = parse_items_text(text_area.get("1.0", tk.END))
+                if not items:
+                    raise ValueError("No items provided")
+                self.loot_items.extend(items)
+                self.update_loot_file()
+                messagebox.showinfo("Success", f"Added {len(items)} items.")
+                bulk_window.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"Invalid input: {e}")
+
+        ttk.Button(bulk_window, text="Add Items", command=save_bulk).pack(pady=5)
 
     def delete_item(self):
         item_names = [item.name for item in self.loot_items]
