@@ -1,6 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, simpledialog
-from utils import load_loot_items, load_presets, save_presets, generate_loot, LootItem, json
+from utils import (
+    load_loot_items,
+    load_all_tags,
+    load_presets,
+    save_presets,
+    generate_loot,
+    LootItem,
+    json,
+)
 
 
 class LootGeneratorApp:
@@ -8,6 +16,7 @@ class LootGeneratorApp:
         self.root = root
         self.root.title("Loot Generator")
         self.loot_items = load_loot_items()
+        self.all_tags = load_all_tags()
         self.presets = load_presets()
         self.setup_ui()
 
@@ -58,6 +67,8 @@ class LootGeneratorApp:
         # Add/Delete Items
         ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=12, column=0, pady=5)
         ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=12, column=1, pady=5)
+
+        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=13, column=0, columnspan=2, pady=5)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(11, weight=1)
@@ -183,9 +194,20 @@ class LootGeneratorApp:
 
         ttk.Button(delete_window, text="Delete Item", command=confirm_delete).pack(pady=5)
 
+    def update_tag_list(self):
+        self.all_tags = sorted({tag for item in self.loot_items for tag in item.tags})
+
+    def show_tags(self):
+        tags_str = ", ".join(self.all_tags) if self.all_tags else "No tags available"
+        messagebox.showinfo("All Tags", tags_str)
+
     def update_loot_file(self):
+        self.update_tag_list()
         with open('data/loot_items.json', 'w') as file:
-            json.dump([item.__dict__ for item in self.loot_items], file, indent=4)
+            json.dump({
+                "items": [item.__dict__ for item in self.loot_items],
+                "tags": self.all_tags,
+            }, file, indent=4)
 
 if __name__ == "__main__":
     root = tk.Tk()
