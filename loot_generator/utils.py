@@ -69,6 +69,8 @@ def generate_loot(
     min_rarity: Optional[int] = None,
     max_rarity: Optional[int] = None,
 ):
+    if points <= 0:
+        raise ValueError("points must be positive")
     filtered_items = [
         item
         for item in items
@@ -104,14 +106,14 @@ def generate_loot(
     if not filtered_items:
         return loot
 
-    weights = [1/item.rarity for item in filtered_items]
-
     while total_points < points:
-        item = random.choices(filtered_items, weights=weights, k=1)[0]
-        if total_points + item.point_value <= points:
-            loot.append(item)
-            total_points += item.point_value
-        else:
+        remaining = points - total_points
+        available_items = [i for i in filtered_items if i.point_value <= remaining]
+        if not available_items:
             break
+        weights = [1 / i.rarity for i in available_items]
+        item = random.choices(available_items, weights=weights, k=1)[0]
+        loot.append(item)
+        total_points += item.point_value
 
     return loot
