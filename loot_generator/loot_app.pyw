@@ -157,7 +157,7 @@ class LootGeneratorApp:
             try:
                 item = LootItem(
                     name=entries["Name"].get(),
-                    rarity=entries["Rarity"].get(),
+                    rarity=int(entries["Rarity (numeric, higher is rarer)"].get()),
                     description=entries["Description"].get(),
                     point_value=int(entries["Point Value"].get()),
                     tags=[tag.strip() for tag in entries["Tags (comma-separated)"].get().split(',')]
