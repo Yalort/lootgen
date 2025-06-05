@@ -78,6 +78,16 @@ def generate_loot(
         and (max_rarity is None or item.rarity <= max_rarity)
     ]
 
+    # Validate rarities and skip items with non-positive values
+    invalid_items = [item for item in filtered_items if item.rarity <= 0]
+    if invalid_items:
+        filtered_items = [item for item in filtered_items if item.rarity > 0]
+        if not filtered_items:
+            invalid_names = ", ".join(item.name for item in invalid_items)
+            raise ValueError(
+                f"All filtered items have non-positive rarity: {invalid_names}"
+            )
+
     loot = []
     total_points = 0
 
