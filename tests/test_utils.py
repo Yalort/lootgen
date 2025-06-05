@@ -2,6 +2,7 @@ import os
 import json
 import random
 import tempfile
+import pytest
 from loot_generator import utils
 
 
@@ -86,3 +87,12 @@ def test_generate_loot_no_items_when_filtered_out():
     random.seed(0)
     loot = utils.generate_loot(items, points=10, include_tags=['nonexistent'])
     assert loot == []
+
+
+def test_generate_loot_invalid_point_values_raise():
+    items = [
+        utils.LootItem('Bad1', 1, '', 0, []),
+        utils.LootItem('Bad2', 1, '', -5, []),
+    ]
+    with pytest.raises(ValueError):
+        utils.generate_loot(items, points=5)
