@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*$py.class
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
