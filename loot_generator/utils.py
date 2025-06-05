@@ -88,6 +88,16 @@ def generate_loot(
                 f"All filtered items have non-positive rarity: {invalid_names}"
             )
 
+    # Filter out items with invalid or zero point values
+    invalid_value_items = [item for item in filtered_items if item.point_value <= 0]
+    if invalid_value_items:
+        filtered_items = [item for item in filtered_items if item.point_value > 0]
+        if not filtered_items:
+            invalid_names = ", ".join(item.name for item in invalid_value_items)
+            raise ValueError(
+                f"All filtered items have non-positive point value: {invalid_names}"
+            )
+
     loot = []
     total_points = 0
 
