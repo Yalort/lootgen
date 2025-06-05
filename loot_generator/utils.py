@@ -117,3 +117,27 @@ def generate_loot(
         total_points += item.point_value
 
     return loot
+
+
+def parse_items_text(text: str) -> List[LootItem]:
+    """Parse a bulk text string into ``LootItem`` objects.
+
+    Each non-empty line should contain five ``|`` separated fields in the
+    order ``name|rarity|description|point_value|tag1,tag2``. Tags are
+    comma-separated. Whitespace around fields is ignored.
+    """
+
+    items: List[LootItem] = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) != 5:
+            raise ValueError("Each line must contain five '|' separated fields")
+        name, rarity_str, description, value_str, tags_str = parts
+        rarity = int(rarity_str)
+        point_value = int(value_str)
+        tags = [t.strip() for t in tags_str.split(",") if t.strip()]
+        items.append(LootItem(name, rarity, description, point_value, tags))
+
+    return items

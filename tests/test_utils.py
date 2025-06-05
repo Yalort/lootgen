@@ -96,3 +96,21 @@ def test_generate_loot_invalid_point_values_raise():
     ]
     with pytest.raises(ValueError):
         utils.generate_loot(items, points=5)
+
+
+def test_parse_items_text_valid():
+    text = "Sword|1|Sharp blade|10|weapon,melee"
+    items = utils.parse_items_text(text)
+    assert len(items) == 1
+    item = items[0]
+    assert item.name == "Sword"
+    assert item.rarity == 1
+    assert item.description == "Sharp blade"
+    assert item.point_value == 10
+    assert item.tags == ["weapon", "melee"]
+
+
+def test_parse_items_text_invalid():
+    text = "Bad|data"
+    with pytest.raises(ValueError):
+        utils.parse_items_text(text)

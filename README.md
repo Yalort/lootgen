@@ -38,7 +38,8 @@ a preset, or **Delete Preset** to remove it.
 
 ## Adding Items
 
-Click **Add Item** to open a dialog where you can enter the item's name,
-rarity, description, point value and tags. Items you add are saved to
-`loot_items.json` and become available for future loot generation.
+Click **Add Item** to open a dialog for a single item or **Bulk Add Items** to
+paste multiple items at once. In bulk mode, enter one item per line using the
+format `name|rarity|description|point_value|tag1,tag2`. All added items are
+saved to `loot_items.json` and become available for future loot generation.
 
