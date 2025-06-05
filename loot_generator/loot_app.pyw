@@ -8,6 +8,7 @@ from utils import (
     generate_loot,
     LootItem,
     json,
+    _resolve,
 )
 
 
@@ -203,7 +204,7 @@ class LootGeneratorApp:
 
     def update_loot_file(self):
         self.update_tag_list()
-        with open('data/loot_items.json', 'w') as file:
+        with open(_resolve('data/loot_items.json'), 'w') as file:
             json.dump({
                 "items": [item.__dict__ for item in self.loot_items],
                 "tags": self.all_tags,
