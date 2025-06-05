@@ -99,8 +99,26 @@ class LootGeneratorApp:
 
         self.output_area.delete('1.0', tk.END)
         if loot:
+            item_counts = {}
             for item in loot:
-                self.output_area.insert(tk.END, f"{item.name} (Rarity: {item.rarity}) - {item.description} [{item.point_value} points]\n")
+                if item.name in item_counts:
+                    item_counts[item.name]["count"] += 1
+                else:
+                    item_counts[item.name] = {"item": item, "count": 1}
+
+            for data in item_counts.values():
+                item = data["item"]
+                count = data["count"]
+                if count > 1:
+                    self.output_area.insert(
+                        tk.END,
+                        f"{count}x {item.name} (Rarity: {item.rarity}) - {item.description} [{item.point_value} points each]\n",
+                    )
+                else:
+                    self.output_area.insert(
+                        tk.END,
+                        f"{item.name} (Rarity: {item.rarity}) - {item.description} [{item.point_value} points]\n",
+                    )
         else:
             self.output_area.insert(tk.END, "No loot items matched your criteria.\n")
 
