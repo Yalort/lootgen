@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, simpledialog
+import json
 from utils import (
     load_loot_items,
     load_all_tags,
@@ -7,7 +8,6 @@ from utils import (
     save_presets,
     generate_loot,
     LootItem,
-    json,
     _resolve,
 )
 
