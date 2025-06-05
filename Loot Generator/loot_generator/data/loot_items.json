@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Steel Sword",
+        "rarity": "Common",
+        "description": "A simple but reliable sword.",
+        "point_value": 10,
+        "tags": ["weapon", "melee"]
+    },
+    {
+        "name": "Magic Wand",
+        "rarity": "Rare",
+        "description": "Channels mysterious energies.",
+        "point_value": 25,
+        "tags": ["weapon", "magic"]
+    },
+    {
+        "name": "Healing Potion",
+        "rarity": "Uncommon",
+        "description": "Restores health points.",
+        "point_value": 15,
+        "tags": ["consumable", "magic"]
+    }
+]
