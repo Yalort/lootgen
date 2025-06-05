@@ -26,7 +26,8 @@ python loot_generator/loot_app.pyw
 ```
 
 This opens a window where you can generate loot, manage presets and maintain
-the list of available items.
+the list of available items. Generated loot now includes each item's tags in
+the output so you can easily see why an item was selected.
 
 ## Using Presets
 

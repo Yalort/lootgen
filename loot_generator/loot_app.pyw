@@ -109,15 +109,16 @@ class LootGeneratorApp:
             for data in item_counts.values():
                 item = data["item"]
                 count = data["count"]
+                tags_str = ", ".join(item.tags)
                 if count > 1:
                     self.output_area.insert(
                         tk.END,
-                        f"{count}x {item.name} (Rarity: {item.rarity}) - {item.description} [{item.point_value} points each]\n",
+                        f"{count}x {item.name} (Rarity: {item.rarity}, Tags: {tags_str}) - {item.description} [{item.point_value} points each]\n",
                     )
                 else:
                     self.output_area.insert(
                         tk.END,
-                        f"{item.name} (Rarity: {item.rarity}) - {item.description} [{item.point_value} points]\n",
+                        f"{item.name} (Rarity: {item.rarity}, Tags: {tags_str}) - {item.description} [{item.point_value} points]\n",
                     )
         else:
             self.output_area.insert(tk.END, "No loot items matched your criteria.\n")
