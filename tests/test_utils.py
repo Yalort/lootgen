@@ -143,6 +143,30 @@ def test_resolve_material_placeholders_optional_none():
     assert value == 8
 
 
+def test_resolve_material_placeholders_multiple_types():
+    random.seed(0)
+    materials = [
+        utils.Material("Iron", 1.2, "Metal"),
+        utils.Material("Oak", 1.3, "Wood"),
+        utils.Material("Ruby", 1.4, "Stone"),
+    ]
+    name, value = utils.resolve_material_placeholders("[Wood/Metal/Stone] Ring", 10, materials)
+    assert name == "Oak Ring"
+    assert value == 13
+
+
+def test_resolve_material_placeholders_multiple_types_optional_none():
+    random.seed(1)
+    materials = [
+        utils.Material("Steel", 1.2, "Metal"),
+        utils.Material("Birch", 1.1, "Wood"),
+    ]
+    name, value = utils.resolve_material_placeholders("Ring [Metal/Wood/o]", 10, materials)
+    # With seed 1 optional placeholder is removed
+    assert name == "Ring"
+    assert value == 10
+
+
 def test_generate_loot_with_materials():
     items = [utils.LootItem('[Metal] Dagger', 1, '', 10, ['weapon'])]
     materials = [utils.Material('Iron', 1.0, 'Metal')]
