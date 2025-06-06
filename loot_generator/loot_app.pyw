@@ -101,6 +101,7 @@ class LootGeneratorApp:
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=0, column=0, sticky=tk.NS, padx=(0, 5))
         ttk.Button(button_frame, text="Add Item", command=self.add_item).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Edit Item", command=self.edit_item).pack(fill=tk.X, pady=2)
         ttk.Button(button_frame, text="Delete Item", command=self.delete_item).pack(fill=tk.X, pady=2)
         ttk.Button(button_frame, text="Bulk Add Items", command=self.bulk_add_items).pack(fill=tk.X, pady=2)
 
@@ -114,6 +115,7 @@ class LootGeneratorApp:
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.items_tree.yview)
         scrollbar.grid(row=0, column=2, sticky=tk.NS)
         self.items_tree.configure(yscrollcommand=scrollbar.set)
+        self.items_tree.bind("<Double-1>", self.edit_item)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(0, weight=1)
@@ -126,6 +128,7 @@ class LootGeneratorApp:
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=0, column=0, sticky=tk.NS, padx=(0, 5))
         ttk.Button(button_frame, text="Add Material", command=self.add_material).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Edit Material", command=self.edit_material).pack(fill=tk.X, pady=2)
         ttk.Button(button_frame, text="Delete Material", command=self.delete_material).pack(fill=tk.X, pady=2)
         ttk.Button(button_frame, text="Bulk Add Materials", command=self.bulk_add_materials).pack(fill=tk.X, pady=2)
 
@@ -139,6 +142,7 @@ class LootGeneratorApp:
         scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.materials_tree.yview)
         scrollbar.grid(row=0, column=2, sticky=tk.NS)
         self.materials_tree.configure(yscrollcommand=scrollbar.set)
+        self.materials_tree.bind("<Double-1>", self.edit_material)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(0, weight=1)
@@ -270,6 +274,51 @@ class LootGeneratorApp:
 
         ttk.Button(add_window, text="Add Item", command=save_new_item).grid(row=len(fields), column=0, columnspan=2, pady=5)
 
+    def edit_item(self, event=None):
+        selection = self.items_tree.selection()
+        if not selection:
+            messagebox.showerror("Error", "Item not selected.")
+            return
+        name = self.items_tree.item(selection[0], "values")[0]
+        item = next((i for i in self.loot_items if i.name == name), None)
+        if not item:
+            messagebox.showerror("Error", "Item not found.")
+            return
+
+        edit_window = tk.Toplevel(self.root)
+        edit_window.title(f"Edit Item - {name}")
+
+        fields = [
+            ("Name", item.name),
+            ("Rarity (numeric, higher is rarer)", item.rarity),
+            ("Description", item.description),
+            ("Point Value", item.point_value),
+            ("Tags (comma-separated)", ", ".join(item.tags)),
+        ]
+        entries = {}
+        for idx, (label, value) in enumerate(fields):
+            ttk.Label(edit_window, text=label).grid(row=idx, column=0, sticky=tk.W, pady=2)
+            entry = ttk.Entry(edit_window, width=40)
+            entry.insert(0, str(value))
+            entry.grid(row=idx, column=1, pady=2)
+            entries[label] = entry
+
+        def save():
+            try:
+                item.name = entries["Name"].get()
+                item.rarity = int(entries["Rarity (numeric, higher is rarer)"].get())
+                item.description = entries["Description"].get()
+                item.point_value = int(entries["Point Value"].get())
+                item.tags = [t.strip() for t in entries["Tags (comma-separated)"].get().split(',') if t.strip()]
+                self.update_loot_file()
+                self.populate_items_tree()
+                messagebox.showinfo("Updated", f"Item '{item.name}' updated.")
+                edit_window.destroy()
+            except Exception as exc:
+                messagebox.showerror("Error", f"Invalid input: {exc}")
+
+        ttk.Button(edit_window, text="Save", command=save).grid(row=len(fields), column=0, columnspan=2, pady=5)
+
     def bulk_add_items(self):
         bulk_window = tk.Toplevel(self.root)
         bulk_window.title("Bulk Add Loot Items")
@@ -363,6 +412,47 @@ class LootGeneratorApp:
                 messagebox.showerror("Error", f"Invalid input: {e}")
 
         ttk.Button(add_window, text="Add Material", command=save_material).grid(row=len(fields), column=0, columnspan=2, pady=5)
+
+    def edit_material(self, event=None):
+        selection = self.materials_tree.selection()
+        if not selection:
+            messagebox.showerror("Error", "Material not selected.")
+            return
+        name = self.materials_tree.item(selection[0], "values")[0]
+        mat = next((m for m in self.materials if m.name == name), None)
+        if not mat:
+            messagebox.showerror("Error", "Material not found.")
+            return
+
+        edit_window = tk.Toplevel(self.root)
+        edit_window.title(f"Edit Material - {name}")
+
+        fields = [
+            ("Name", mat.name),
+            ("Modifier (e.g. 1.2)", mat.modifier),
+            ("Type (Metal/Stone/Wood/Fabric)", mat.type),
+        ]
+        entries = {}
+        for idx, (label, value) in enumerate(fields):
+            ttk.Label(edit_window, text=label).grid(row=idx, column=0, sticky=tk.W, pady=2)
+            entry = ttk.Entry(edit_window, width=30)
+            entry.insert(0, str(value))
+            entry.grid(row=idx, column=1, pady=2)
+            entries[label] = entry
+
+        def save():
+            try:
+                mat.name = entries["Name"].get()
+                mat.modifier = float(entries["Modifier (e.g. 1.2)"].get())
+                mat.type = entries["Type (Metal/Stone/Wood/Fabric)"].get()
+                self.update_material_file()
+                self.populate_materials_tree()
+                messagebox.showinfo("Updated", f"Material '{mat.name}' updated.")
+                edit_window.destroy()
+            except Exception as exc:
+                messagebox.showerror("Error", f"Invalid input: {exc}")
+
+        ttk.Button(edit_window, text="Save", command=save).grid(row=len(fields), column=0, columnspan=2, pady=5)
 
     def delete_material(self):
         names = [m.name for m in self.materials]

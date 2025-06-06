@@ -40,9 +40,11 @@ a preset, or **Delete Preset** to remove it.
 ## Adding Items
 
 Use the **Items** tab to manage loot items. Click **Add Item** for a single
-entry or **Bulk Add Items** to paste many at once. In bulk mode, enter one item
-per line as `name|rarity|description|point_value|tag1,tag2`. All added items are
-saved to `loot_items.json` and become available for future loot generation.
+entry or **Bulk Add Items** to paste many at once. Existing entries can be
+modified with **Edit Item** or removed with **Delete Item**. In bulk mode, enter
+one item per line as `name|rarity|description|point_value|tag1,tag2`. All added
+items are saved to `loot_items.json` and become available for future loot
+generation.
 
 ## Managing Materials
 
@@ -51,9 +53,9 @@ are replaced with a random material when loot is generated. Multiple material
 types can be combined with slashes, e.g. `[Wood/Metal/Stone]`, in which case a
 material of any listed type may be chosen. Materials are stored in
 `materials.json` and each has a name, point modifier and type (`Metal`, `Stone`,
-`Wood` or `Fabric`). The **Materials** tab provides **Add Material**, **Bulk Add
-Materials** and **Delete Material** actions. Optional placeholders denoted with
-`/o` may resolve to an empty string, allowing items like `[Metal] [Stone/o]
-Earring` or `[Wood/Metal/o] Shield` to generate with or without the material
-name.
+`Wood` or `Fabric`). The **Materials** tab provides **Add Material**, **Edit
+Material**, **Bulk Add Materials** and **Delete Material** actions. Optional
+placeholders denoted with `/o` may resolve to an empty string, allowing items
+like `[Metal] [Stone/o] Earring` or `[Wood/Metal/o] Shield` to generate with or
+without the material name.
 
