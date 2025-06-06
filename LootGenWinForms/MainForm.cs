@@ -16,10 +16,13 @@ namespace LootGenWinForms
 
         public MainForm()
         {
-            InitializeComponent();
+            // Load data before initializing UI components so that bindings
+            // and preset lists have valid sources during initialization.
             _items = DataLoader.LoadLootItems();
             _materials = DataLoader.LoadMaterials();
             _presets = DataLoader.LoadPresets();
+
+            InitializeComponent();
         }
 
         private void OnGenerate(object? sender, EventArgs e)
