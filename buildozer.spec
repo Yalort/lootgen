@@ -2,6 +2,7 @@
 title = Loot Generator
 package.name = lootgen
 package.domain = org.example
+version = 0.1
 source.dir = .
 source.include_exts = py,png,jpg,kv,json
 source.exclude_dirs = tests
