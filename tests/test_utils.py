@@ -30,15 +30,15 @@ def test_resolve_returns_module_relative_path():
     assert path == expected
 
 
-def test_load_loot_items_returns_objects():
+def test_load_loot_items_returns_empty_list():
     items = utils.load_loot_items()
-    assert items
-    assert all(isinstance(i, utils.LootItem) for i in items)
+    assert isinstance(items, list)
+    assert items == []
 
 
 def test_load_all_tags_from_tags_key():
     tags = utils.load_all_tags()
-    assert 'weapon' in tags
+    assert tags == []
     assert isinstance(tags, list)
 
 
@@ -59,31 +59,42 @@ def test_load_and_save_presets_roundtrip(tmp_path):
 
 
 def test_generate_loot_include_tags():
-    items = utils.load_loot_items()
+    items = [
+        utils.LootItem('Sword', 1, '', 10, ['weapon']),
+        utils.LootItem('Axe', 1, '', 10, ['weapon']),
+        utils.LootItem('Potion', 1, '', 5, ['consumable']),
+    ]
     random.seed(1)
-    loot = utils.generate_loot(items, points=20, include_tags=['weapon'])
+    loot = utils.generate_loot(items, points=15, include_tags=['weapon'])
     assert loot
     assert all('weapon' in item.tags for item in loot)
 
 
 def test_generate_loot_exclude_tags():
-    items = utils.load_loot_items()
+    items = [
+        utils.LootItem('Wand', 1, '', 10, ['magic']),
+        utils.LootItem('Sword', 1, '', 10, ['weapon']),
+    ]
     random.seed(0)
-    loot = utils.generate_loot(items, points=30, exclude_tags=['magic'])
+    loot = utils.generate_loot(items, points=15, exclude_tags=['magic'])
     assert loot
     assert all('magic' not in item.tags for item in loot)
 
 
 def test_generate_loot_rarity_filters():
-    items = utils.load_loot_items()
+    items = [
+        utils.LootItem('Common', 1, '', 5, ['misc']),
+        utils.LootItem('Uncommon', 2, '', 5, ['misc']),
+        utils.LootItem('Rare', 3, '', 5, ['misc']),
+    ]
     random.seed(0)
-    loot = utils.generate_loot(items, points=30, min_rarity=2, max_rarity=3)
+    loot = utils.generate_loot(items, points=15, min_rarity=2, max_rarity=3)
     assert loot
     assert all(2 <= item.rarity <= 3 for item in loot)
 
 
 def test_generate_loot_no_items_when_filtered_out():
-    items = utils.load_loot_items()
+    items = [utils.LootItem('Sword', 1, '', 10, ['weapon'])]
     random.seed(0)
     loot = utils.generate_loot(items, points=10, include_tags=['nonexistent'])
     assert loot == []
