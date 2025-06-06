@@ -25,3 +25,16 @@ The main window contains three tabs:
 Click **Generate** to produce a list of loot items. Material placeholders in item names (e.g. `[Metal/o] Sword`) are resolved automatically.
 
 All data files are located in the `data` directory and are copied next to the executable on build.
+
+## MAUI Version
+
+A simplified .NET MAUI application has been added for Android compatibility. The MAUI project is located in `LootGenMaui` and shares the same loot generation logic.
+
+Build the MAUI application using the .NET SDK with Android or other targets installed:
+
+```bash
+# restore and build
+dotnet build LootGenWinForms.sln
+```
+
+Run on your desired device or emulator using standard MAUI deployment commands.
