@@ -149,3 +149,19 @@ def test_generate_loot_with_materials():
     random.seed(1)
     loot = utils.generate_loot(items, points=10, materials=materials)
     assert loot[0].name == 'Iron Dagger'
+
+
+def test_parse_materials_text_valid():
+    text = "Steel|1.2|Metal"
+    mats = utils.parse_materials_text(text)
+    assert len(mats) == 1
+    m = mats[0]
+    assert m.name == "Steel"
+    assert m.modifier == 1.2
+    assert m.type == "Metal"
+
+
+def test_parse_materials_text_invalid():
+    text = "Bad|data"
+    with pytest.raises(ValueError):
+        utils.parse_materials_text(text)

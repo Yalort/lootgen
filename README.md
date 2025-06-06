@@ -26,8 +26,9 @@ python loot_generator/loot_app.pyw
 ```
 
 This opens a window where you can generate loot, manage presets and maintain
-the list of available items. Generated loot now includes each item's tags in
-the output so you can easily see why an item was selected.
+the list of available items. Item and material management now live on separate
+"Items" and "Materials" tabs. Generated loot includes each item's tags so you
+can easily see why an item was selected.
 
 ## Using Presets
 
@@ -38,9 +39,9 @@ a preset, or **Delete Preset** to remove it.
 
 ## Adding Items
 
-Click **Add Item** to open a dialog for a single item or **Bulk Add Items** to
-paste multiple items at once. In bulk mode, enter one item per line using the
-format `name|rarity|description|point_value|tag1,tag2`. All added items are
+Use the **Items** tab to manage loot items. Click **Add Item** for a single
+entry or **Bulk Add Items** to paste many at once. In bulk mode, enter one item
+per line as `name|rarity|description|point_value|tag1,tag2`. All added items are
 saved to `loot_items.json` and become available for future loot generation.
 
 ## Managing Materials
@@ -48,8 +49,9 @@ saved to `loot_items.json` and become available for future loot generation.
 Some item names may include placeholders such as `[Metal]` or `[Stone/o]` which
 are replaced with a random material when loot is generated. Materials are stored
 in `materials.json` and each has a name, point modifier and type
-(`Metal`, `Stone`, `Wood` or `Fabric`). Use **Add Material** and **Delete
-Material** in the GUI to manage this list. Optional placeholders denoted with
-`/o` may resolve to an empty string, allowing items like `[Metal] [Stone/o]
-Earring` to generate as "Steel Diamond Earring" or simply "Copper Earring".
+(`Metal`, `Stone`, `Wood` or `Fabric`). The **Materials** tab provides
+**Add Material**, **Bulk Add Materials** and **Delete Material** actions. Optional
+placeholders denoted with `/o` may resolve to an empty string, allowing items
+like `[Metal] [Stone/o] Earring` to generate as "Steel Diamond Earring" or
+simply "Copper Earring".
 
