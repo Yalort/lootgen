@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, simpledialog
+import tkinter.font as tkfont
 import json
 from utils import (
     load_loot_items,
@@ -21,6 +22,7 @@ class LootGeneratorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Loot Generator")
+        self._increase_fonts()
         self.loot_items = load_loot_items()
         self.all_tags = load_all_tags()
         self.presets = load_presets()
@@ -296,27 +298,42 @@ class LootGeneratorApp:
 
     def delete_item(self):
         item_names = [item.name for item in self.loot_items]
-        delete_window = tk.Toplevel(self.root)
-        delete_window.title("Delete Loot Item")
+        win = tk.Toplevel(self.root)
+        win.title("Delete Loot Item")
 
-        ttk.Label(delete_window, text="Select Item to Delete:").pack(pady=5)
-        item_combo = ttk.Combobox(delete_window, values=item_names)
-        item_combo.pack(pady=5)
+        ttk.Label(win, text="Search:").pack(pady=2)
+        search_var = tk.StringVar()
+        search_entry = ttk.Entry(win, textvariable=search_var)
+        search_entry.pack(pady=2, fill=tk.X, padx=5)
+
+        listbox = tk.Listbox(win, height=10)
+        listbox.pack(pady=5, fill=tk.BOTH, expand=True)
+
+        def update_list(*args):
+            term = search_var.get().lower()
+            listbox.delete(0, tk.END)
+            for name in item_names:
+                if term in name.lower():
+                    listbox.insert(tk.END, name)
+
+        search_var.trace_add("write", update_list)
+        update_list()
 
         def confirm_delete():
-            name = item_combo.get()
-            item = next((item for item in self.loot_items if item.name == name), None)
-            if item:
-                if messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
-                    self.loot_items.remove(item)
-                    self.update_loot_file()
-                    self.populate_items_tree()
-                    messagebox.showinfo("Deleted", f"Item '{name}' deleted.")
-                    delete_window.destroy()
-            else:
-                messagebox.showerror("Error", "Item not found.")
+            sel = listbox.curselection()
+            if not sel:
+                messagebox.showerror("Error", "Item not selected.")
+                return
+            name = listbox.get(sel[0])
+            item = next((i for i in self.loot_items if i.name == name), None)
+            if item and messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
+                self.loot_items.remove(item)
+                self.update_loot_file()
+                self.populate_items_tree()
+                messagebox.showinfo("Deleted", f"Item '{name}' deleted.")
+                win.destroy()
 
-        ttk.Button(delete_window, text="Delete Item", command=confirm_delete).pack(pady=5)
+        ttk.Button(win, text="Delete Item", command=confirm_delete).pack(pady=5)
 
     def add_material(self):
         add_window = tk.Toplevel(self.root)
@@ -351,22 +368,38 @@ class LootGeneratorApp:
         names = [m.name for m in self.materials]
         win = tk.Toplevel(self.root)
         win.title("Delete Material")
-        ttk.Label(win, text="Select Material:").pack(pady=5)
-        combo = ttk.Combobox(win, values=names)
-        combo.pack(pady=5)
+
+        ttk.Label(win, text="Search:").pack(pady=2)
+        search_var = tk.StringVar()
+        entry = ttk.Entry(win, textvariable=search_var)
+        entry.pack(pady=2, fill=tk.X, padx=5)
+
+        listbox = tk.Listbox(win, height=10)
+        listbox.pack(pady=5, fill=tk.BOTH, expand=True)
+
+        def update_list(*args):
+            term = search_var.get().lower()
+            listbox.delete(0, tk.END)
+            for n in names:
+                if term in n.lower():
+                    listbox.insert(tk.END, n)
+
+        search_var.trace_add("write", update_list)
+        update_list()
 
         def confirm():
-            name = combo.get()
+            sel = listbox.curselection()
+            if not sel:
+                messagebox.showerror("Error", "Material not selected.")
+                return
+            name = listbox.get(sel[0])
             mat = next((m for m in self.materials if m.name == name), None)
-            if mat:
-                if messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
-                    self.materials.remove(mat)
-                    self.update_material_file()
-                    self.populate_materials_tree()
-                    messagebox.showinfo("Deleted", f"Material '{name}' deleted.")
-                    win.destroy()
-            else:
-                messagebox.showerror("Error", "Material not found.")
+            if mat and messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
+                self.materials.remove(mat)
+                self.update_material_file()
+                self.populate_materials_tree()
+                messagebox.showinfo("Deleted", f"Material '{name}' deleted.")
+                win.destroy()
 
         ttk.Button(win, text="Delete", command=confirm).pack(pady=5)
 
@@ -463,6 +496,22 @@ class LootGeneratorApp:
         for index, (_, k) in enumerate(data):
             tree.move(k, "", index)
         tree.heading(col, command=lambda: self.sort_treeview(tree, col, not reverse))
+
+    def _increase_fonts(self, scale: float = 1.2):
+        """Increase default Tk fonts by the given scale."""
+        for name in (
+            "TkDefaultFont",
+            "TkTextFont",
+            "TkFixedFont",
+            "TkMenuFont",
+            "TkHeadingFont",
+        ):
+            try:
+                f = tkfont.nametofont(name)
+                size = f.cget("size")
+                f.configure(size=int(round(size * scale)))
+            except tk.TclError:
+                pass
 
 if __name__ == "__main__":
     root = tk.Tk()
