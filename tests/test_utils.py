@@ -125,3 +125,27 @@ def test_parse_items_text_invalid():
     text = "Bad|data"
     with pytest.raises(ValueError):
         utils.parse_items_text(text)
+
+
+def test_resolve_material_placeholders_required():
+    materials = [utils.Material("Steel", 1.2, "Metal")]
+    name, value = utils.resolve_material_placeholders("[Metal] Sword", 10, materials)
+    assert name in {"Steel Sword"}
+    assert value == 12
+
+
+def test_resolve_material_placeholders_optional_none():
+    random.seed(1)
+    materials = [utils.Material("Ruby", 1.5, "Stone")]
+    name, value = utils.resolve_material_placeholders("Ring with [Stone/o]", 8, materials)
+    # With seed 1 the random check drops the material
+    assert name == "Ring with"
+    assert value == 8
+
+
+def test_generate_loot_with_materials():
+    items = [utils.LootItem('[Metal] Dagger', 1, '', 10, ['weapon'])]
+    materials = [utils.Material('Iron', 1.0, 'Metal')]
+    random.seed(1)
+    loot = utils.generate_loot(items, points=10, materials=materials)
+    assert loot[0].name == 'Iron Dagger'
