@@ -1,1 +1,1 @@
-# This project has no external dependencies.
+kivy==2.3.0
