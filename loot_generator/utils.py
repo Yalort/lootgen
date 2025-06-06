@@ -201,3 +201,24 @@ def parse_items_text(text: str) -> List[LootItem]:
         items.append(LootItem(name, rarity, description, point_value, tags))
 
     return items
+
+
+def parse_materials_text(text: str) -> List[Material]:
+    """Parse a bulk text string into ``Material`` objects.
+
+    Each non-empty line should contain three ``|`` separated fields in the
+    order ``name|modifier|type``. Whitespace around fields is ignored.
+    """
+
+    materials: List[Material] = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) != 3:
+            raise ValueError("Each line must contain three '|' separated fields")
+        name, modifier_str, type_str = parts
+        modifier = float(modifier_str)
+        materials.append(Material(name, modifier, type_str))
+
+    return materials

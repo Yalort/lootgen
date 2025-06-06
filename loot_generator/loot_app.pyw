@@ -8,6 +8,7 @@ from utils import (
     save_presets,
     generate_loot,
     parse_items_text,
+    parse_materials_text,
     LootItem,
     load_materials,
     save_materials,
@@ -28,10 +29,25 @@ class LootGeneratorApp:
         self.update_preset_listbox()
 
     def setup_ui(self):
-        frame = ttk.Frame(self.root, padding="10")
-        frame.pack(fill=tk.BOTH, expand=True)
+        notebook = ttk.Notebook(self.root)
+        notebook.pack(fill=tk.BOTH, expand=True)
 
-        # Loot Points & Tags input
+        self.generate_tab = ttk.Frame(notebook, padding="10")
+        self.items_tab = ttk.Frame(notebook, padding="10")
+        self.materials_tab = ttk.Frame(notebook, padding="10")
+
+        notebook.add(self.generate_tab, text="Generate")
+        notebook.add(self.items_tab, text="Items")
+        notebook.add(self.materials_tab, text="Materials")
+
+        self.setup_generate_tab()
+        self.setup_items_tab()
+        self.setup_materials_tab()
+
+
+    def setup_generate_tab(self):
+        frame = self.generate_tab
+
         ttk.Label(frame, text="Loot Points:").grid(row=0, column=0, sticky=tk.W)
         self.loot_points_entry = ttk.Entry(frame)
         self.loot_points_entry.grid(row=0, column=1, sticky=tk.EW)
@@ -44,7 +60,6 @@ class LootGeneratorApp:
         self.exclude_tags_entry = ttk.Entry(frame)
         self.exclude_tags_entry.grid(row=2, column=1, sticky=tk.EW)
 
-        # Rarities
         ttk.Label(frame, text="Max Rarity (numeric):").grid(row=3, column=0, sticky=tk.W)
         self.max_rarity_entry = ttk.Entry(frame)
         self.max_rarity_entry.grid(row=3, column=1, sticky=tk.EW)
@@ -53,11 +68,8 @@ class LootGeneratorApp:
         self.min_rarity_entry = ttk.Entry(frame)
         self.min_rarity_entry.grid(row=4, column=1, sticky=tk.EW)
 
-
-        #Generate button
         ttk.Button(frame, text="Generate Loot", command=self.generate_loot).grid(row=5, column=0, columnspan=2, pady=5)
 
-        # Presets management - searchable listbox
         ttk.Label(frame, text="Search Presets:").grid(row=6, column=0, sticky=tk.W)
         self.preset_search_var = tk.StringVar()
         self.preset_search_var.trace_add("write", lambda *args: self.update_preset_listbox())
@@ -71,24 +83,28 @@ class LootGeneratorApp:
         ttk.Button(frame, text="Save Preset", command=self.save_preset).grid(row=9, column=0, columnspan=2)
         ttk.Button(frame, text="Delete Preset", command=self.delete_preset).grid(row=10, column=0, columnspan=2)
 
-        # Loot display
         ttk.Label(frame, text="Generated Loot:").grid(row=11, column=0, sticky=tk.W)
         self.output_area = scrolledtext.ScrolledText(frame, height=8)
         self.output_area.grid(row=12, column=0, columnspan=2, sticky=tk.NSEW, pady=5)
 
-        # Add/Delete Items
-        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=13, column=0, pady=5)
-        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=13, column=1, pady=5)
-
-        ttk.Button(frame, text="Add Material", command=self.add_material).grid(row=14, column=0, pady=5)
-        ttk.Button(frame, text="Delete Material", command=self.delete_material).grid(row=14, column=1, pady=5)
-
-        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=15, column=0, columnspan=2, pady=5)
-        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=16, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=13, column=0, columnspan=2, pady=5)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(12, weight=1)
 
+
+    def setup_items_tab(self):
+        frame = self.items_tab
+        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=0, column=0, pady=5, sticky=tk.EW)
+        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=1, column=0, pady=5, sticky=tk.EW)
+        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=2, column=0, pady=5, sticky=tk.EW)
+
+
+    def setup_materials_tab(self):
+        frame = self.materials_tab
+        ttk.Button(frame, text="Add Material", command=self.add_material).grid(row=0, column=0, pady=5, sticky=tk.EW)
+        ttk.Button(frame, text="Delete Material", command=self.delete_material).grid(row=1, column=0, pady=5, sticky=tk.EW)
+        ttk.Button(frame, text="Bulk Add Materials", command=self.bulk_add_materials).grid(row=2, column=0, pady=5, sticky=tk.EW)
 
     def generate_loot(self):
         points = int(self.loot_points_entry.get())
@@ -312,6 +328,31 @@ class LootGeneratorApp:
                 messagebox.showerror("Error", "Material not found.")
 
         ttk.Button(win, text="Delete", command=confirm).pack(pady=5)
+
+    def bulk_add_materials(self):
+        bulk_window = tk.Toplevel(self.root)
+        bulk_window.title("Bulk Add Materials")
+
+        ttk.Label(
+            bulk_window,
+            text="Enter materials one per line as name|modifier|type",
+        ).pack(pady=5)
+        text_area = tk.Text(bulk_window, width=50, height=10)
+        text_area.pack(padx=5, pady=5)
+
+        def save_bulk():
+            try:
+                mats = parse_materials_text(text_area.get("1.0", tk.END))
+                if not mats:
+                    raise ValueError("No materials provided")
+                self.materials.extend(mats)
+                self.update_material_file()
+                messagebox.showinfo("Success", f"Added {len(mats)} materials.")
+                bulk_window.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"Invalid input: {e}")
+
+        ttk.Button(bulk_window, text="Add Materials", command=save_bulk).pack(pady=5)
 
     def update_preset_listbox(self):
         search = self.preset_search_var.get().lower()
