@@ -59,3 +59,21 @@ placeholders denoted with `/o` may resolve to an empty string, allowing items
 like `[Metal] [Stone/o] Earring` or `[Wood/Metal/o] Shield` to generate with or
 without the material name.
 
+
+## Android Application
+
+A simple Kivy-based interface is provided for running the loot generator on Android. To test it on your desktop install the dependencies and run:
+
+```bash
+pip install -r requirements.txt
+python loot_generator/android_app.py
+```
+
+To build an APK install [Buildozer](https://github.com/kivy/buildozer) and run:
+
+```bash
+pip install buildozer
+buildozer -v android debug
+```
+
+This uses the provided `buildozer.spec` file and packages the Kivy application defined in `loot_generator/android_app.py`.
