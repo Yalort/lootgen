@@ -95,16 +95,52 @@ class LootGeneratorApp:
 
     def setup_items_tab(self):
         frame = self.items_tab
-        ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=0, column=0, pady=5, sticky=tk.EW)
-        ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=1, column=0, pady=5, sticky=tk.EW)
-        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=2, column=0, pady=5, sticky=tk.EW)
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=0, column=0, sticky=tk.NS, padx=(0, 5))
+        ttk.Button(button_frame, text="Add Item", command=self.add_item).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Delete Item", command=self.delete_item).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Bulk Add Items", command=self.bulk_add_items).pack(fill=tk.X, pady=2)
+
+        columns = ("Name", "Rarity", "Description", "Value", "Tags")
+        self.items_tree = ttk.Treeview(frame, columns=columns, show="headings")
+        for col in columns:
+            self.items_tree.heading(col, text=col, command=lambda c=col: self.sort_treeview(self.items_tree, c, False))
+            self.items_tree.column(col, anchor=tk.W, minwidth=50)
+        self.items_tree.grid(row=0, column=1, sticky=tk.NSEW)
+
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.items_tree.yview)
+        scrollbar.grid(row=0, column=2, sticky=tk.NS)
+        self.items_tree.configure(yscrollcommand=scrollbar.set)
+
+        frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(0, weight=1)
+        self.populate_items_tree()
 
 
     def setup_materials_tab(self):
         frame = self.materials_tab
-        ttk.Button(frame, text="Add Material", command=self.add_material).grid(row=0, column=0, pady=5, sticky=tk.EW)
-        ttk.Button(frame, text="Delete Material", command=self.delete_material).grid(row=1, column=0, pady=5, sticky=tk.EW)
-        ttk.Button(frame, text="Bulk Add Materials", command=self.bulk_add_materials).grid(row=2, column=0, pady=5, sticky=tk.EW)
+
+        button_frame = ttk.Frame(frame)
+        button_frame.grid(row=0, column=0, sticky=tk.NS, padx=(0, 5))
+        ttk.Button(button_frame, text="Add Material", command=self.add_material).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Delete Material", command=self.delete_material).pack(fill=tk.X, pady=2)
+        ttk.Button(button_frame, text="Bulk Add Materials", command=self.bulk_add_materials).pack(fill=tk.X, pady=2)
+
+        columns = ("Name", "Modifier", "Type")
+        self.materials_tree = ttk.Treeview(frame, columns=columns, show="headings")
+        for col in columns:
+            self.materials_tree.heading(col, text=col, command=lambda c=col: self.sort_treeview(self.materials_tree, c, False))
+            self.materials_tree.column(col, anchor=tk.W, minwidth=50)
+        self.materials_tree.grid(row=0, column=1, sticky=tk.NSEW)
+
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.materials_tree.yview)
+        scrollbar.grid(row=0, column=2, sticky=tk.NS)
+        self.materials_tree.configure(yscrollcommand=scrollbar.set)
+
+        frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(0, weight=1)
+        self.populate_materials_tree()
 
     def generate_loot(self):
         points = int(self.loot_points_entry.get())
@@ -224,6 +260,7 @@ class LootGeneratorApp:
                 )
                 self.loot_items.append(item)
                 self.update_loot_file()
+                self.populate_items_tree()
                 messagebox.showinfo("Success", f"Item '{item.name}' added.")
                 add_window.destroy()
             except Exception as e:
@@ -249,6 +286,7 @@ class LootGeneratorApp:
                     raise ValueError("No items provided")
                 self.loot_items.extend(items)
                 self.update_loot_file()
+                self.populate_items_tree()
                 messagebox.showinfo("Success", f"Added {len(items)} items.")
                 bulk_window.destroy()
             except Exception as e:
@@ -272,6 +310,7 @@ class LootGeneratorApp:
                 if messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
                     self.loot_items.remove(item)
                     self.update_loot_file()
+                    self.populate_items_tree()
                     messagebox.showinfo("Deleted", f"Item '{name}' deleted.")
                     delete_window.destroy()
             else:
@@ -300,6 +339,7 @@ class LootGeneratorApp:
                 )
                 self.materials.append(material)
                 self.update_material_file()
+                self.populate_materials_tree()
                 messagebox.showinfo("Success", f"Material '{material.name}' added.")
                 add_window.destroy()
             except Exception as e:
@@ -322,6 +362,7 @@ class LootGeneratorApp:
                 if messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
                     self.materials.remove(mat)
                     self.update_material_file()
+                    self.populate_materials_tree()
                     messagebox.showinfo("Deleted", f"Material '{name}' deleted.")
                     win.destroy()
             else:
@@ -347,6 +388,7 @@ class LootGeneratorApp:
                     raise ValueError("No materials provided")
                 self.materials.extend(mats)
                 self.update_material_file()
+                self.populate_materials_tree()
                 messagebox.showinfo("Success", f"Added {len(mats)} materials.")
                 bulk_window.destroy()
             except Exception as e:
@@ -379,6 +421,48 @@ class LootGeneratorApp:
     def update_material_file(self):
         with open(_resolve('data/materials.json'), 'w') as file:
             json.dump({"materials": [m.__dict__ for m in self.materials]}, file, indent=4)
+
+    def populate_items_tree(self):
+        if not hasattr(self, "items_tree"):
+            return
+        self.items_tree.delete(*self.items_tree.get_children())
+        for item in self.loot_items:
+            self.items_tree.insert(
+                "",
+                tk.END,
+                values=(
+                    item.name,
+                    item.rarity,
+                    item.description,
+                    item.point_value,
+                    ", ".join(item.tags),
+                ),
+            )
+
+    def populate_materials_tree(self):
+        if not hasattr(self, "materials_tree"):
+            return
+        self.materials_tree.delete(*self.materials_tree.get_children())
+        for mat in self.materials:
+            self.materials_tree.insert(
+                "",
+                tk.END,
+                values=(mat.name, mat.modifier, mat.type),
+            )
+
+    def sort_treeview(self, tree, col, reverse):
+        data = [(tree.set(k, col), k) for k in tree.get_children("")]
+
+        def _convert(val):
+            try:
+                return float(val)
+            except ValueError:
+                return val.lower()
+
+        data.sort(key=lambda t: _convert(t[0]), reverse=reverse)
+        for index, (_, k) in enumerate(data):
+            tree.move(k, "", index)
+        tree.heading(col, command=lambda: self.sort_treeview(tree, col, not reverse))
 
 if __name__ == "__main__":
     root = tk.Tk()
