@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -12,12 +13,39 @@ class LootItem:
     point_value: int
     tags: List[str]
 
+
+@dataclass
+class Material:
+    """A material that can be inserted into item names."""
+
+    name: str
+    modifier: float
+    type: str
+
 BASE_DIR = os.path.dirname(__file__)
 
 
 def _resolve(path: str) -> str:
     """Return absolute path relative to this module."""
     return os.path.join(BASE_DIR, path)
+
+
+def load_materials(filepath=_resolve('data/materials.json')) -> List[Material]:
+    """Load material definitions from json file."""
+    path = _resolve(filepath) if isinstance(filepath, str) and not os.path.isabs(filepath) else filepath
+    if not os.path.exists(path):
+        return []
+    with open(path, 'r') as file:
+        data = json.load(file)
+    materials_data = data.get("materials", data)
+    return [Material(**m) for m in materials_data]
+
+
+def save_materials(materials: List[Material], filepath=_resolve('data/materials.json')) -> None:
+    """Save material definitions to json file."""
+    path = _resolve(filepath) if isinstance(filepath, str) and not os.path.isabs(filepath) else filepath
+    with open(path, 'w') as file:
+        json.dump({"materials": [m.__dict__ for m in materials]}, file, indent=4)
 
 
 def load_loot_items(filepath=_resolve('data/loot_items.json')):
@@ -68,6 +96,7 @@ def generate_loot(
     exclude_tags: Optional[List[str]] = None,
     min_rarity: Optional[int] = None,
     max_rarity: Optional[int] = None,
+    materials: Optional[List[Material]] = None,
 ):
     if points <= 0:
         raise ValueError("points must be positive")
@@ -113,10 +142,41 @@ def generate_loot(
             break
         weights = [1 / i.rarity for i in available_items]
         item = random.choices(available_items, weights=weights, k=1)[0]
+        if materials:
+            name, value = resolve_material_placeholders(item.name, item.point_value, materials)
+            item = LootItem(name, item.rarity, item.description, value, item.tags)
         loot.append(item)
         total_points += item.point_value
 
     return loot
+
+
+def resolve_material_placeholders(name: str, value: int, materials: List[Material]) -> (str, int):
+    """Replace material placeholders in ``name`` using provided materials.
+
+    Placeholders are of the form ``[Metal]`` or ``[Metal/o]``. The optional
+    variant (``/o``) may be replaced with an empty string with 50% probability.
+    ``value`` is modified by each material's ``modifier``.
+    """
+    pattern = re.compile(r"\[(Metal|Stone|Wood|Fabric)(/o)?\]")
+    modifiers = 1.0
+
+    def repl(match: re.Match) -> str:
+        nonlocal modifiers
+        m_type, optional = match.group(1), match.group(2)
+        if optional:
+            if random.random() < 0.5:
+                return ""
+        options = [m for m in materials if m.type.lower() == m_type.lower()]
+        if not options:
+            return ""
+        mat = random.choice(options)
+        modifiers *= mat.modifier
+        return mat.name
+
+    new_name = pattern.sub(repl, name)
+    new_value = int(round(value * modifiers))
+    return new_name.strip(), new_value
 
 
 def parse_items_text(text: str) -> List[LootItem]:

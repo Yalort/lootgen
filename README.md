@@ -43,3 +43,13 @@ paste multiple items at once. In bulk mode, enter one item per line using the
 format `name|rarity|description|point_value|tag1,tag2`. All added items are
 saved to `loot_items.json` and become available for future loot generation.
 
+## Managing Materials
+
+Some item names may include placeholders such as `[Metal]` or `[Stone/o]` which
+are replaced with a random material when loot is generated. Materials are stored
+in `materials.json` and each has a name, point modifier and type
+(`Metal`, `Stone`, `Wood` or `Fabric`). Use **Add Material** and **Delete
+Material** in the GUI to manage this list. Optional placeholders denoted with
+`/o` may resolve to an empty string, allowing items like `[Metal] [Stone/o]
+Earring` to generate as "Steel Diamond Earring" or simply "Copper Earring".
+

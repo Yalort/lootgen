@@ -9,6 +9,9 @@ from utils import (
     generate_loot,
     parse_items_text,
     LootItem,
+    load_materials,
+    save_materials,
+    Material,
     _resolve,
 )
 
@@ -20,6 +23,7 @@ class LootGeneratorApp:
         self.loot_items = load_loot_items()
         self.all_tags = load_all_tags()
         self.presets = load_presets()
+        self.materials = load_materials()
         self.setup_ui()
         self.update_preset_listbox()
 
@@ -76,8 +80,11 @@ class LootGeneratorApp:
         ttk.Button(frame, text="Add Item", command=self.add_item).grid(row=13, column=0, pady=5)
         ttk.Button(frame, text="Delete Item", command=self.delete_item).grid(row=13, column=1, pady=5)
 
-        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=14, column=0, columnspan=2, pady=5)
-        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=15, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Add Material", command=self.add_material).grid(row=14, column=0, pady=5)
+        ttk.Button(frame, text="Delete Material", command=self.delete_material).grid(row=14, column=1, pady=5)
+
+        ttk.Button(frame, text="Bulk Add Items", command=self.bulk_add_items).grid(row=15, column=0, columnspan=2, pady=5)
+        ttk.Button(frame, text="Show Tags", command=self.show_tags).grid(row=16, column=0, columnspan=2, pady=5)
 
         frame.columnconfigure(1, weight=1)
         frame.rowconfigure(12, weight=1)
@@ -97,6 +104,7 @@ class LootGeneratorApp:
             exclude_tags,
             min_rarity,
             max_rarity,
+            self.materials,
         )
 
         self.output_area.delete('1.0', tk.END)
@@ -255,6 +263,56 @@ class LootGeneratorApp:
 
         ttk.Button(delete_window, text="Delete Item", command=confirm_delete).pack(pady=5)
 
+    def add_material(self):
+        add_window = tk.Toplevel(self.root)
+        add_window.title("Add Material")
+
+        fields = ["Name", "Modifier (e.g. 1.2)", "Type (Metal/Stone/Wood/Fabric)"]
+        entries = {}
+        for idx, field in enumerate(fields):
+            ttk.Label(add_window, text=field).grid(row=idx, column=0, sticky=tk.W, pady=2)
+            entry = ttk.Entry(add_window, width=30)
+            entry.grid(row=idx, column=1, pady=2)
+            entries[field] = entry
+
+        def save_material():
+            try:
+                material = Material(
+                    name=entries["Name"].get(),
+                    modifier=float(entries["Modifier (e.g. 1.2)"].get()),
+                    type=entries["Type (Metal/Stone/Wood/Fabric)"].get(),
+                )
+                self.materials.append(material)
+                self.update_material_file()
+                messagebox.showinfo("Success", f"Material '{material.name}' added.")
+                add_window.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", f"Invalid input: {e}")
+
+        ttk.Button(add_window, text="Add Material", command=save_material).grid(row=len(fields), column=0, columnspan=2, pady=5)
+
+    def delete_material(self):
+        names = [m.name for m in self.materials]
+        win = tk.Toplevel(self.root)
+        win.title("Delete Material")
+        ttk.Label(win, text="Select Material:").pack(pady=5)
+        combo = ttk.Combobox(win, values=names)
+        combo.pack(pady=5)
+
+        def confirm():
+            name = combo.get()
+            mat = next((m for m in self.materials if m.name == name), None)
+            if mat:
+                if messagebox.askyesno("Confirm Delete", f"Delete '{name}'?"):
+                    self.materials.remove(mat)
+                    self.update_material_file()
+                    messagebox.showinfo("Deleted", f"Material '{name}' deleted.")
+                    win.destroy()
+            else:
+                messagebox.showerror("Error", "Material not found.")
+
+        ttk.Button(win, text="Delete", command=confirm).pack(pady=5)
+
     def update_preset_listbox(self):
         search = self.preset_search_var.get().lower()
         names = [name for name in self.presets.keys() if search in name.lower()]
@@ -276,6 +334,10 @@ class LootGeneratorApp:
                 "items": [item.__dict__ for item in self.loot_items],
                 "tags": self.all_tags,
             }, file, indent=4)
+
+    def update_material_file(self):
+        with open(_resolve('data/materials.json'), 'w') as file:
+            json.dump({"materials": [m.__dict__ for m in self.materials]}, file, indent=4)
 
 if __name__ == "__main__":
     root = tk.Tk()
