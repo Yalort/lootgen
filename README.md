@@ -47,11 +47,13 @@ saved to `loot_items.json` and become available for future loot generation.
 ## Managing Materials
 
 Some item names may include placeholders such as `[Metal]` or `[Stone/o]` which
-are replaced with a random material when loot is generated. Materials are stored
-in `materials.json` and each has a name, point modifier and type
-(`Metal`, `Stone`, `Wood` or `Fabric`). The **Materials** tab provides
-**Add Material**, **Bulk Add Materials** and **Delete Material** actions. Optional
-placeholders denoted with `/o` may resolve to an empty string, allowing items
-like `[Metal] [Stone/o] Earring` to generate as "Steel Diamond Earring" or
-simply "Copper Earring".
+are replaced with a random material when loot is generated. Multiple material
+types can be combined with slashes, e.g. `[Wood/Metal/Stone]`, in which case a
+material of any listed type may be chosen. Materials are stored in
+`materials.json` and each has a name, point modifier and type (`Metal`, `Stone`,
+`Wood` or `Fabric`). The **Materials** tab provides **Add Material**, **Bulk Add
+Materials** and **Delete Material** actions. Optional placeholders denoted with
+`/o` may resolve to an empty string, allowing items like `[Metal] [Stone/o]
+Earring` or `[Wood/Metal/o] Shield` to generate with or without the material
+name.
 

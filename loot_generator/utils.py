@@ -154,20 +154,24 @@ def generate_loot(
 def resolve_material_placeholders(name: str, value: int, materials: List[Material]) -> (str, int):
     """Replace material placeholders in ``name`` using provided materials.
 
-    Placeholders are of the form ``[Metal]`` or ``[Metal/o]``. The optional
-    variant (``/o``) may be replaced with an empty string with 50% probability.
-    ``value`` is modified by each material's ``modifier``.
+    Placeholders are of the form ``[Metal]`` or ``[Metal/o]``. Multiple material
+    types can be provided by separating them with ``/`` such as
+    ``[Wood/Metal/Stone]``. The optional variant (``/o``) may be combined with
+    multiple types (e.g. ``[Wood/Metal/o]``) and may be replaced with an empty
+    string with 50% probability. ``value`` is modified by each material's
+    ``modifier``.
     """
-    pattern = re.compile(r"\[(Metal|Stone|Wood|Fabric)(/o)?\]")
+    pattern = re.compile(r"\[([A-Za-z/]+?)(?:(/o))?\]")
     modifiers = 1.0
 
     def repl(match: re.Match) -> str:
         nonlocal modifiers
-        m_type, optional = match.group(1), match.group(2)
+        types_str, optional = match.group(1), match.group(2)
         if optional:
             if random.random() < 0.5:
                 return ""
-        options = [m for m in materials if m.type.lower() == m_type.lower()]
+        types = [t.strip() for t in types_str.split("/") if t.strip()]
+        options = [m for m in materials if m.type.lower() in {t.lower() for t in types}]
         if not options:
             return ""
         mat = random.choice(options)
